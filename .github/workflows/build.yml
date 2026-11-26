@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3 git make
+          python3 --version
+
+      - name: ounce-devkit (libounce)
+        run: |
+          git clone --depth 1 https://github.com/ouncebrew/ounce-devkit /tmp/ounce-devkit
+          cd /tmp/ounce-devkit
+          sh install.sh
+          ls "$DEVKITPRO/libounce"
+
+      - name: Loader (nx2-game.nro)
+        working-directory: loader
+        run: python3 tools/build_loader.py
+
+      - name: Menu (nx2-flow.nro)
+        working-directory: menu
+        run: make
+
+      - name: Card layout
+        run: |
+          mkdir -p card/switch/nx2-flow card/nx2-flow/games
+          cp loader/out/nx2-game.nro menu/out/nx2-flow.nro card/switch/nx2-flow/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ns2LOAD-sd-card
+          path: card/

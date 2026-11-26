@@ -22,7 +22,18 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/ouncebrew/ounce-devkit /tmp/ounce-devkit
           cd /tmp/ounce-devkit
-          sh install.sh
+          # pkg.devkitpro.org answers GitHub's runners with 403 at times. The image already has devkitPro's packages, so when
+          # install.sh fails at that, the [ounce] packages are installed with a configuration that has only [ounce] in it.
+          if ! sh install.sh; then
+            conf=/opt/devkitpro/pacman/etc/pacman.conf
+            awk '/^\[/{keep = ($0 !~ /^\[dkp-/)} keep || !/^\[|^Server|^Include/' "$conf" > /tmp/ounce-only.conf
+            cat /tmp/ounce-only.conf
+            set -f
+            ow="--overwrite /opt/devkitpro/libounce/* --overwrite /opt/devkitpro/portlibs/switch2/* --overwrite /opt/devkitpro/switch2vars.sh"
+            dkp-pacman --config /tmp/ounce-only.conf -Sy --needed --noconfirm $ow libounce ouncevk libkaihen \
+              || dkp-pacman --config /tmp/ounce-only.conf -Sydd --needed --noconfirm $ow libounce ouncevk libkaihen
+            set +f
+          fi
           ls "$DEVKITPRO/libounce"
 
       - name: Loader (ns2LOAD-game.nro)

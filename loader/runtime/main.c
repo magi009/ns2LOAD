@@ -17,6 +17,7 @@ static u64 early_size, early_all;
 static u64 heap_was, heap_given, heap_at, heap_host;
 static u32 heap_given_rc;
 #ifdef NX2_LOADER
+static int vam_auto;  // the host has no system resource and the game was made for one: the pool of vam.c, unasked
 static u64 loader_room;  // (the game loader's room for a game's modules and unpacked files, below)
 #endif
 void __libnx_initheap(void) {
@@ -277,6 +278,7 @@ int main(int argc, char **argv) {
                 u64 there = 0;
                 if (R_SUCCEEDED(svcGetInfo(&there, 16, CUR_PROCESS_HANDLE, 0))) {
                     const u64 made_for = (u64)NX2_GAME_SYSRES_KB << 10;
+                    if (!there && made_for) vam_auto = 1;  // (the pool is taken for it, below, unless <folder>/vam says otherwise)
                     nx2_log("[nx2] memory the system keeps for a program's own mappings (\"system resource\"): the title this was started over has %u MB; the game was made for %u MB%s\n",
                             there >> 20, made_for >> 20,
                             !there && made_for ? ". THERE IS NONE: a game that maps memory as it runs can't here, and may end at its start. Started over a title that has some, it would have it"
@@ -341,11 +343,18 @@ int main(int argc, char **argv) {
             }
             {  // (<folder>/vam: the game's address regions from a pool of the heap, for a title with no system resource; vam.c.
                // The file's number is the pool's size in MB; empty, 1024.)
+               // (Taken on its own when the host has no system resource and the game was made for one, as under Pokopia;
+               // a file with 0 in it turns that off.)
                 FILE *vam = fopen(NX2_F("vam"), "rb");
+                unsigned mb = 0;
+                int asked = vam != NULL;
                 if (vam) {
-                    unsigned mb = 0;
                     if (fscanf(vam, "%u", &mb) != 1) mb = 0;
+                    else if (!mb) asked = -1;  // ("0": no pool)
                     fclose(vam);
+                }
+                if (asked > 0 || (!asked && vam_auto)) {
+                    if (!asked) nx2_log("[vam] the host has no system resource: the pool is taken on its own (<folder>/vam with 0 in it: not)\n");
                     nx2_heap_pool(mb);
                 }
             }

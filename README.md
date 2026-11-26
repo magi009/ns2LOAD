@@ -5,8 +5,9 @@ adds one thing so far:
 
 - **`<folder>/vam`: address regions from a pool of the heap** (`loader/runtime/vam.c`). A game made for a "system resource"
   (nn::os::AllocateAddressRegion and the pages it maps) ends with a data abort (2168-0002) when the title the homebrew menu is
-  started over has none. With the file `vam` in the game's folder, the loader takes a pool from the heap before the game starts
-  and answers those calls from it. The file's number is the pool's size in MB (empty: 1024). Untested on a console yet.
+  started over has none (Pokopia, for one). The loader then takes a pool from the heap before the game starts and answers those
+  calls from it, on its own. A file `vam` in the game's folder sets the pool's size in MB (empty: 1024), turns it on for any
+  host, or with `0` in it turns it off. Untested on a console yet.
 
 The programs and folders are renamed: the menu is `/switch/ns2LOAD/ns2LOAD.nro`, the loader `/switch/ns2LOAD/ns2LOAD-game.nro`,
 and the games, covers and each game's folder are under `/ns2LOAD/` (where nx2-flow's text below says `/nx2-flow/`).

@@ -866,7 +866,10 @@ int nx2_svc(u64 *r, u32 n) {
                 program = bytes < (128ull << 20) ? bytes : (128ull << 20);
                 nx2_log("[nx2] the game is told its program is %u MB of the memory in use (its modules, and 16 MB for stacks)\n", program >> 20);
             }
-            r[0] = 0, r[1] = program + (type == 6 || type == 21 ? heap_max : 0);
+            // (Memory in use counts the heap the game has set, as on its console: the SDK's nn::os::QueryMemoryInfo takes the heap
+            // from it to find the program's size, and with the program alone said to be in use, after the game had set a heap of
+            // 7242 MB, that came out below nothing and Super Mario Bros. Wonder ended itself at its HeapDef's Program; log, 2026-11-26.)
+            r[0] = 0, r[1] = program + (type == 6 || type == 21 ? heap_max : heap_now);
             return 1;
         }
 #endif

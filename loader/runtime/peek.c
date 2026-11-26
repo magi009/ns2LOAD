@@ -34,8 +34,22 @@ static void *real(const char *name, void **cache) {
 #define OPEN_FILE "_ZN2nn2fs8OpenFileEPNS0_10FileHandleEPKci"
 #define STRCMP "strcmp"
 #define ABORT "_ZN2nn4diag6detail9AbortImplEv"
+#define QUERY_MEMORY "_ZN2nn2os15QueryMemoryInfoEPNS0_10MemoryInfoE"
 
-static void *real_open, *real_abort;
+static void *real_open, *real_abort, *real_query;
+
+typedef struct {
+    u64 available, used, heap, heap_allocated, program, stacks;
+    s32 threads;
+} memory_info;
+static void query_memory(memory_info *info) {  // (what the game is told of memory, as nn::os sums it up)
+    void (*f)(memory_info *) = real(QUERY_MEMORY, &real_query);
+    if (f) f(info);
+    if (info)
+        nx2_log("[peek] nn::os::QueryMemoryInfo: available %u MB, used %u MB, heap %u MB (%u MB of it given out), program %u MB, stacks %u KB, %u threads\n",
+                info->available >> 20, info->used >> 20, info->heap >> 20, info->heap_allocated >> 20, info->program >> 20, info->stacks >> 10,
+                (u64)info->threads);
+}
 
 static u32 open_file(void *handle, const char *path, int mode) {
     char p[TEXT];
@@ -75,5 +89,6 @@ void *nx2_peek_override(const char *name) {
     if (!strcmp(name, OPEN_FILE)) return open_file;
     if (!strcmp(name, STRCMP)) return compare;
     if (!strcmp(name, ABORT)) return abort_impl;
+    if (!strcmp(name, QUERY_MEMORY)) return query_memory;
     return NULL;
 }

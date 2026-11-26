@@ -109,6 +109,8 @@ void nx2_heap_pool(u64 mb);  // svc.c: a pool for the game's address regions put
 extern int nx2_vam;
 u64 nx2_vam_init(u64 base, u64 host, u64 mb);  // the pool taken: its bytes, or 0
 void *nx2_vam_override(const char *name);       // the imports it answers, or null
+// peek.c: with <folder>/debug, the paths the game opens and the strings it compares, said when it ends itself
+void *nx2_peek_override(const char *name);
 
 // gl2.c (Switch 2): the game's imports that go to the host's OpenGL, or nowhere, in place of the SDK's graphics driver
 void *nx2_override(const char *name);  // what an import of this name is bound to, or null: the modules' own

@@ -741,6 +741,8 @@ void *nx2_override(const char *name) {
     {  // (<folder>/vam: the SDK's address regions, from a pool; vam.c)
         void *v = nx2_vam_override(name);
         if (v) return v;
+        v = nx2_peek_override(name);  // (<folder>/debug: what the game opened and compared; peek.c)
+        if (v) return v;
     }
     static const struct {
         const char *name;

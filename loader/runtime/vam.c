@@ -18,7 +18,9 @@
 
 #include "nx2.h"
 
-enum { VAM_MAX = 512, VAM_ALIGN = 0x200000 };
+// (Regions start on 64 KB, as the console's own do. 2 MB each, at first, made 296 of a game's small regions (64 KB the most of
+// them) fill a pool of 1024 MB, and the rest were refused; a report, 2026-11-26.)
+enum { VAM_MAX = 8192, VAM_ALIGN = 0x10000 };
 
 int nx2_vam;          // the pool is in use (<folder>/vam)
 static u64 pool_base, pool_size;
@@ -79,7 +81,9 @@ static u32 allocate_region(u64 *out, u64 size) {
     }
     unlock();
     if (!fits) {
-        nx2_log("[vam] AllocateAddressRegion of %x bytes: the pool of %u MB has no room for it (%u regions); a larger number in <folder>/vam\n", size,
+        static u32 told;
+        if (told++ < 8)
+            nx2_log("[vam] AllocateAddressRegion of %x bytes: the pool of %u MB has no room for it (%u regions); a larger number in <folder>/vam\n", size,
                 pool_size >> 20, (u64)count);
         return VAM_OUT_OF_MEMORY;
     }

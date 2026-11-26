@@ -43,7 +43,7 @@ using u64 = std::uint64_t;
 using Clock = std::chrono::steady_clock;
 
 constexpr u32 kMagic = 0x31585454; // "TTX1"
-constexpr const char* kLogFile = "/nx2-flow/transfer.log";
+constexpr const char* kLogFile = "/ns2LOAD/transfer.log";
 
 enum Op : u8 { OpPing = 0, OpList = 1, OpPut = 2, OpGet = 3, OpDelete = 4, OpHash = 5, OpMkdir = 6 };
 

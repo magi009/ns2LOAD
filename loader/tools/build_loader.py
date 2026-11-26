@@ -1,7 +1,7 @@
 """The game loader of nx2-flow: the runtime built with no game in it, as one program that reads a game from its NUP file when it is
 started (runtime/game.c).
 
-  python tools/build_loader.py [--out <folder>]      out/nx2-game.nro, for a Switch 2
+  python tools/build_loader.py [--out <folder>]      out/ns2LOAD-game.nro, for a Switch 2
 """
 import glob
 import os
@@ -42,12 +42,12 @@ def main():
         if said.strip():
             print(said.rstrip())
         objs.append(o)
-    elf = f'{work}/nx2-game.elf'
+    elf = f'{work}/ns2LOAD-game.elf'
     build.run([build.GCC, *build.ARCH, '-g', '-o', elf, *objs, *ldflags, '-Wl,--wrap=__libnx_exception_entry',
-               '-Wl,--wrap=svcBreak,--wrap=svcExitProcess,--wrap=svcReturnFromException,--wrap=abort,--wrap=svcExitThread', f'-Wl,-Map,{work}/nx2-game.map'])
+               '-Wl,--wrap=svcBreak,--wrap=svcExitProcess,--wrap=svcReturnFromException,--wrap=abort,--wrap=svcExitThread', f'-Wl,-Map,{work}/ns2LOAD-game.map'])
     os.makedirs(out_dir, exist_ok=True)
-    nro, nacp = f'{out_dir}/nx2-game.nro', f'{work}/nx2-game.nacp'
-    build.run([f'{build.DKP}/tools/bin/nacptool', '--create', 'nx2-flow game loader', 'nx2-flow', VERSION, nacp])
+    nro, nacp = f'{out_dir}/ns2LOAD-game.nro', f'{work}/ns2LOAD-game.nacp'
+    build.run([f'{build.DKP}/tools/bin/nacptool', '--create', 'ns2LOAD game loader', 'Olmectron, magi009', VERSION, nacp])
     build.run([f'{build.DKP}/tools/bin/elf2nro', elf, nro, f'--nacp={nacp}'])
     print(f'{nro}: {os.path.getsize(nro) >> 10} KB; symbols in {elf}')
 

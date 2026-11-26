@@ -8,7 +8,8 @@ adds one thing so far:
   started over has none. With the file `vam` in the game's folder, the loader takes a pool from the heap before the game starts
   and answers those calls from it. The file's number is the pool's size in MB (empty: 1024). Untested on a console yet.
 
-The programs, folders on the card and file names are still nx2-flow's, so that the menu finds the loader where it looks.
+The programs and folders are renamed: the menu is `/switch/ns2LOAD/ns2LOAD.nro`, the loader `/switch/ns2LOAD/ns2LOAD-game.nro`,
+and the games, covers and each game's folder are under `/ns2LOAD/` (where nx2-flow's text below says `/nx2-flow/`).
 Built by GitHub Actions (`.github/workflows/build.yml`): the card's files are the run's artifact.
 
 The licenses are the original project's: GPL-2.0-or-later for `menu/`, MIT for `loader/` (Zstandard's decoder: BSD).

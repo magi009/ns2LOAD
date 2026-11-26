@@ -273,14 +273,14 @@ int main(int argc, char** argv) {
     run.Press(Key('a'), 30);
     run.Shot("35-transfer-waiting");
     g_transfer.connected = g_transfer.busy = true;
-    g_transfer.current = "Receiving /nx2-flow/games/Pretend Game Seven [0400F00000071000].nup";
+    g_transfer.current = "Receiving /ns2LOAD/games/Pretend Game Seven [0400F00000071000].nup";
     g_transfer.total = 6200ull << 20;
     g_transfer.queue_now = 1;
     g_transfer.files = 2;
     g_transfer.bytes = 181ull << 20;
     g_transfer.lines.push_back("192.168.0.20 connected");
-    g_transfer.lines.push_back("PUT /nx2-flow/covers/ids.txt: 212 bytes, 0.1 MB/s");
-    g_transfer.lines.push_back("PUT /nx2-flow/games/Another Pretend Game.nup: 180.6 MiB in 6.9 s, 26.2 MB/s; longest pause 0.21 s; queue at most 3 of 8");
+    g_transfer.lines.push_back("PUT /ns2LOAD/covers/ids.txt: 212 bytes, 0.1 MB/s");
+    g_transfer.lines.push_back("PUT /ns2LOAD/games/Another Pretend Game.nup: 180.6 MiB in 6.9 s, 26.2 MB/s; longest pause 0.21 s; queue at most 3 of 8");
     for (int k = 1; k <= 40; ++k) { // (some seconds of a steady pace, for the figure to settle)
         g_transfer.done = static_cast<std::uint64_t>(k) * (27ull << 20) / 4 + (2600ull << 20);
         run.Press({}, 15);
@@ -292,7 +292,7 @@ int main(int argc, char** argv) {
     g_transfer.busy = false;
     g_transfer.files = 3;
     g_transfer.bytes = 6381ull << 20;
-    g_transfer.lines.push_back("PUT /nx2-flow/games/Pretend Game Seven [0400F00000071000].nup: 6200.0 MiB in 238.4 s, 26.0 MB/s; longest pause 0.34 s; queue at most 4 of 8");
+    g_transfer.lines.push_back("PUT /ns2LOAD/games/Pretend Game Seven [0400F00000071000].nup: 6200.0 MiB in 238.4 s, 26.0 MB/s; longest pause 0.34 s; queue at most 4 of 8");
     g_address.clear();
     run.Press({}, 200);
     run.Shot("38-transfer-no-network");

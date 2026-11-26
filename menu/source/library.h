@@ -14,16 +14,16 @@
 
 namespace Flow {
 
-// What is where, as paths of the card ("/nx2-flow/..."). The card itself is CardRoot():
+// What is where, as paths of the card ("/ns2LOAD/..."). The card itself is CardRoot():
 // "sdmc:" on the console, a folder on a PC (the previews).
-inline constexpr const char* kName = "nx2-flow";
-inline constexpr const char* kHome = "/nx2-flow";
-inline constexpr const char* kDefaultGames = "/nx2-flow/games";
-inline constexpr const char* kCovers = "/nx2-flow/covers";
-inline constexpr const char* kCache = "/nx2-flow/cache";
-inline constexpr const char* kMenuCfg = "/nx2-flow/menu.cfg";
-inline constexpr const char* kMenuNro = "/switch/nx2-flow/nx2-flow.nro";
-inline constexpr const char* kGameNro = "/switch/nx2-flow/nx2-game.nro";
+inline constexpr const char* kName = "ns2LOAD";
+inline constexpr const char* kHome = "/ns2LOAD";
+inline constexpr const char* kDefaultGames = "/ns2LOAD/games";
+inline constexpr const char* kCovers = "/ns2LOAD/covers";
+inline constexpr const char* kCache = "/ns2LOAD/cache";
+inline constexpr const char* kMenuCfg = "/ns2LOAD/menu.cfg";
+inline constexpr const char* kMenuNro = "/switch/ns2LOAD/ns2LOAD.nro";
+inline constexpr const char* kGameNro = "/switch/ns2LOAD/ns2LOAD-game.nro";
 
 const std::string& CardRoot();
 void SetCardRoot(std::string root);

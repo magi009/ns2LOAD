@@ -27,13 +27,13 @@ typedef int32_t s32;
 #endif
 #ifdef NX2_LOADER
 // The game loader of nx2-flow: one program for every game, which reads a game from its NUP file as it starts (game.c). What a
-// port is built with is found then: the game's folder (sdmc:/nx2-flow/<title id>/), its modules, what it is told of memory.
+// port is built with is found then: the game's folder (sdmc:/ns2LOAD/<title id>/), its modules, what it is told of memory.
 #undef NX2_TOOL
-#define NX2_TOOL "nx2-flow"
+#define NX2_TOOL "ns2LOAD"
 #define NX2_NAME nx2_game_id
 extern char nx2_game_id[17];           // the title id, 16 hex digits
-const char *nx2_home(void);            // "/nx2-flow/<title id>", as the file system service is given it
-const char *nx2_file(const char *name);  // "sdmc:/nx2-flow/<title id>/<name>": good until eight more have been asked for
+const char *nx2_home(void);            // "/ns2LOAD/<title id>", as the file system service is given it
+const char *nx2_file(const char *name);  // "sdmc:/ns2LOAD/<title id>/<name>": good until eight more have been asked for
 #define NX2_F(name) nx2_file(name)
 extern u32 nx2_game_mb, nx2_game_room_mb, nx2_game_apart_mb, nx2_game_remote_mb, nx2_game_sysres_kb;
 int nx2_game_open(const char *nup_path);  // 0: the game's NUP file was read and its modules are in memory

@@ -2,7 +2,7 @@
 
 // Cover artwork for the shelf, after toronja's (src/citra_switch/covers.h).
 //
-// Files live in /nx2-flow/covers:
+// Files live in /ns2LOAD/covers:
 //   covers/full/<ID>.jpg|png   the whole wrap: back, spine and front (the shelf can turn it)
 //   covers/<ID>.jpg|png        the front only
 // where <ID> is the game's title id (16 hex digits) or the code GameTDB files the game under.

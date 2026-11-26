@@ -18,7 +18,7 @@
 #ifdef NX2_LOADER
 // (the game loader: the game's files are the NUP file's own, put together as an image as they are read, game.c; the places below
 // that name a port's image and its mods folder on the card are not come to)
-#define NX2_HOME "/nx2-flow/none"
+#define NX2_HOME "/ns2LOAD/none"
 #endif
 #define ROM_OBJECT 0x4E583200u  // the storages' ids in the session's domain, as the SDK is told (none of the service's are this high)
 

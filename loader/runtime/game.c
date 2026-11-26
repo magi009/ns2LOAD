@@ -36,7 +36,7 @@ Nx2Module nx2_modules[MODULES];
 Nx2Image nx2_images[MODULES];
 unsigned nx2_module_count;
 int nx2_whole;
-static char home[40] = "/nx2-flow/unknown";
+static char home[40] = "/ns2LOAD/unknown";
 static char module_names[MODULES][12];
 static char modset[64];  // (game.cfg: the folder under modsets/ to lay over the game; empty: mods/)
 static char save[80] = "save";  // (game.cfg: the slot of saved data in use: "save", or "saves/<slot>")
@@ -1167,8 +1167,8 @@ int nx2_game_open(const char *path) {
     static const char hex[] = "0123456789abcdef";
     for (int k = 0; k < 16; k++) nx2_game_id[k] = hex[title >> (60 - 4 * k) & 15];
     nx2_game_id[16] = 0;
-    strcpy(home, "/nx2-flow/"), strcat(home, nx2_game_id);
-    mkdir("sdmc:/nx2-flow", 0777);
+    strcpy(home, "/ns2LOAD/"), strcat(home, nx2_game_id);
+    mkdir("sdmc:/ns2LOAD", 0777);
     {
         char dir[96];
         snprintf(dir, sizeof dir, "sdmc:%s", home);

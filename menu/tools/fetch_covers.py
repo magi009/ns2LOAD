@@ -10,8 +10,8 @@ has the game's title id, not that code. So the two have to be tied first, one li
 This script reads the NUP files of a folder (their first kilobytes: nothing is read whole), ties what it can, downloads the whole
 wrap when GameTDB has one and the front otherwise, and writes everything as the menu looks for it:
 
-    python fetch_covers.py <folder of NUP files> --card E:\\             into E:\\nx2-flow\\covers (the card in this computer)
-    python fetch_covers.py <folder of NUP files> --out covers           into a folder, to copy to /nx2-flow/covers yourself
+    python fetch_covers.py <folder of NUP files> --card E:\\             into E:\\ns2LOAD\\covers (the card in this computer)
+    python fetch_covers.py <folder of NUP files> --out covers           into a folder, to copy to /ns2LOAD/covers yourself
 
 How a game gets its code, in this order:
     --id 0400f00000001000=ABCDE     given here, as many times as needed
@@ -134,14 +134,14 @@ def regions_for(code):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('folder', help='the folder the NUP files are in')
-    ap.add_argument('--card', help='the card\'s root (its drive): the covers go to <card>/nx2-flow/covers')
-    ap.add_argument('--out', help='a folder for the covers instead, laid out as /nx2-flow/covers is')
+    ap.add_argument('--card', help='the card\'s root (its drive): the covers go to <card>/ns2LOAD/covers')
+    ap.add_argument('--out', help='a folder for the covers instead, laid out as /ns2LOAD/covers is')
     ap.add_argument('--id', action='append', default=[], metavar='TITLEID=CODE', help='a game\'s GameTDB code, given by hand')
     ap.add_argument('--match-titles', action='store_true', help='look codes up by exact title in GameTDB\'s list of games')
     args = ap.parse_args()
     if not args.card and not args.out:
         ap.error('say where the covers go: --card <the card\'s root> or --out <a folder>')
-    covers = os.path.join(args.card, 'nx2-flow', 'covers') if args.card else args.out
+    covers = os.path.join(args.card, 'ns2LOAD', 'covers') if args.card else args.out
     os.makedirs(os.path.join(covers, 'full'), exist_ok=True)
 
     ids_path = os.path.join(covers, 'ids.txt')
@@ -206,7 +206,7 @@ def main():
         f.write(''.join(f'{key}={value}\n' for key, value in sorted(codes.items())))
     print(f'\n{fetched} downloaded, {missing} not on GameTDB, {untied} with no code; in {covers}')
     if args.out:
-        print('Copy that folder\'s contents to /nx2-flow/covers on the card.')
+        print('Copy that folder\'s contents to /ns2LOAD/covers on the card.')
 
 
 if __name__ == '__main__':

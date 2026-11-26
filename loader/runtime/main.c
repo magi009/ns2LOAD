@@ -150,10 +150,10 @@ int main(int argc, char **argv) {
     const char *menu = NULL;
     for (int k = 2; k < argc; k++)
         if (!strncmp(argv[k], "menu=", 5)) menu = argv[k] + 5;
-    // (started with no file named, as from the homebrew menu itself: the one sdmc:/nx2-flow/next.txt names, if that is there)
+    // (started with no file named, as from the homebrew menu itself: the one sdmc:/ns2LOAD/next.txt names, if that is there)
     static char named[512];
     if (argc < 2) {
-        FILE *next = fopen("sdmc:/nx2-flow/next.txt", "r");
+        FILE *next = fopen("sdmc:/ns2LOAD/next.txt", "r");
         if (next) {
             if (fgets(named, sizeof named, next)) {
                 size_t n = strlen(named);
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
     if (room_back) nx2_log("[nx2] %u MB of the room kept for the game's modules and files are not needed for this game: they are the game's to take\n", room_back >> 20);
     if (menu && envHasNextLoad()) envSetNextLoad(menu, menu);
     if (opened) {
-        nx2_log("[nx2] %s: the game can't be started (the lines above say why)\n", which ? which : "no NUP file was named: this program is started by nx2-flow's menu");
+        nx2_log("[nx2] %s: the game can't be started (the lines above say why)\n", which ? which : "no NUP file was named: this program is started by ns2LOAD's menu");
         nx2_crash("the game's NUP file could not be read, or holds a game this loader can't run (the log's lines that begin \"[game]\" say which and why)");
         nx2_log_end();
         heap_back();

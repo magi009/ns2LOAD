@@ -2,7 +2,7 @@
 #
 # nx2-flow, the menu: a shelf of the games found as NUP files on the card.
 #
-#   make                 the program for the console (ounce-devkit): out/nx2-flow.nro
+#   make                 the program for the console (ounce-devkit): out/ns2LOAD.nro
 #   make preview         a PC program that renders the menu's screens from a pretend card, and
 #                        the pictures themselves in out/preview/ (needs a PC g++ and Python + Pillow)
 #   make nettest         a PC program that runs the file receiver with a folder for a card, to
@@ -14,7 +14,7 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
 endif
 
-TARGET   := nx2-flow
+TARGET   := ns2LOAD
 VERSION  := 0.2.2
 OUT      := out
 SOURCES  := app covers images library nup transfer main_switch
@@ -50,7 +50,7 @@ $(OUT)/$(TARGET).elf: $(OBJECTS)
 	$(CXX) $(LDFLAGS) $^ $(LIBPATHS) $(LIBS) -o $@
 
 $(OUT)/$(TARGET).nacp: | $(OUT)
-	$(TOOLS)/nacptool --create "nx2-flow" "Olmectron" "$(VERSION)" $@
+	$(TOOLS)/nacptool --create "ns2LOAD" "Olmectron, magi009" "$(VERSION)" $@
 
 $(OUT)/$(TARGET).nro: $(OUT)/$(TARGET).elf $(OUT)/$(TARGET).nacp icon.jpg
 	$(TOOLS)/elf2nro $< $@ --nacp=$(OUT)/$(TARGET).nacp --icon=icon.jpg

@@ -1495,7 +1495,7 @@ void App::DrawTransfer(Canvas& c) {
         font.Draw(c, x + 28, ly, font.Truncate(line, 15, w - 56), 15, kColText);
         ly += 25;
     }
-    font.Draw(c, x + 28, y + h - 20, "Every large file's figures are kept in /nx2-flow/transfer.log; the receiver's numbers are in /nx2-flow/menu.cfg.", 15,
+    font.Draw(c, x + 28, y + h - 20, "Every large file's figures are kept in /ns2LOAD/transfer.log; the receiver's numbers are in /ns2LOAD/menu.cfg.", 15,
               kColTextDim);
     DrawHints(c, {{"B", "Back"}});
 }

@@ -109,11 +109,11 @@ def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     card = sys.argv[1]
-    games = os.path.join(card, 'nx2-flow', 'games')
-    covers = os.path.join(card, 'nx2-flow', 'covers')
-    for d in (games, os.path.join(covers, 'full'), os.path.join(card, 'switch', 'nx2-flow'), os.path.join(card, 'roms', 'more', 'deeper'), os.path.join(card, 'empty')):
+    games = os.path.join(card, 'ns2LOAD', 'games')
+    covers = os.path.join(card, 'ns2LOAD', 'covers')
+    for d in (games, os.path.join(covers, 'full'), os.path.join(card, 'switch', 'ns2LOAD'), os.path.join(card, 'roms', 'more', 'deeper'), os.path.join(card, 'empty')):
         os.makedirs(d, exist_ok=True)
-    open(os.path.join(card, 'switch', 'nx2-flow', 'nx2-game.nro'), 'wb').write(b'not a program: a stand-in for the previews\n')
+    open(os.path.join(card, 'switch', 'ns2LOAD', 'ns2LOAD-game.nro'), 'wb').write(b'not a program: a stand-in for the previews\n')
     ids = []
     for k, (title, publisher, version, updates, addons, cover) in enumerate(GAMES):
         title_id = 0x0400F00000001000 + (k << 16)
@@ -133,10 +133,10 @@ def main():
             ids.append(f'{title_id:016x}={code}')
     open(os.path.join(covers, 'ids.txt'), 'w', newline='\n').write('\n'.join(ids) + '\n')
     # (the previews walk through the styles from the first of the list, which is not the one the menu starts with)
-    open(os.path.join(card, 'nx2-flow', 'menu.cfg'), 'w', newline='\n').write('style=Coverflow\n')
+    open(os.path.join(card, 'ns2LOAD', 'menu.cfg'), 'w', newline='\n').write('style=Coverflow\n')
     open(os.path.join(games, 'not a container.nup'), 'wb').write(b'this is not a NUP container' * 8)
     # one game's folder, as after a few runs: two sets of mods, a log, a report
-    folder = os.path.join(card, 'nx2-flow', f'{0x0400F00000001000:016x}')
+    folder = os.path.join(card, 'ns2LOAD', f'{0x0400F00000001000:016x}')
     for d in ('save', 'mods', os.path.join('modsets', 'big textures'), os.path.join('modsets', 'night palette')):
         os.makedirs(os.path.join(folder, d), exist_ok=True)
     for name in ('log.txt', 'crash.txt'):

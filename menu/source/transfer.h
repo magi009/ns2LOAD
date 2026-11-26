@@ -42,7 +42,7 @@ struct State {
     bool listening{};
     bool connected{};
     bool busy{};
-    std::string current;          // "Receiving /nx2-flow/games/x.nup"
+    std::string current;          // "Receiving /ns2LOAD/games/x.nup"
     std::uint64_t done{}, total{};
     int queue_now{}, queue_size{};
     std::uint32_t files{};        // This session.

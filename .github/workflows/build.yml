@@ -25,18 +25,18 @@ jobs:
           sh install.sh
           ls "$DEVKITPRO/libounce"
 
-      - name: Loader (nx2-game.nro)
+      - name: Loader (ns2LOAD-game.nro)
         working-directory: loader
         run: python3 tools/build_loader.py
 
-      - name: Menu (nx2-flow.nro)
+      - name: Menu (ns2LOAD.nro)
         working-directory: menu
         run: make
 
       - name: Card layout
         run: |
-          mkdir -p card/switch/nx2-flow card/nx2-flow/games
-          cp loader/out/nx2-game.nro menu/out/nx2-flow.nro card/switch/nx2-flow/
+          mkdir -p card/switch/ns2LOAD card/ns2LOAD/games
+          cp loader/out/ns2LOAD-game.nro menu/out/ns2LOAD.nro card/switch/ns2LOAD/
 
       - uses: actions/upload-artifact@v4
         with:

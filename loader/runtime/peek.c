@@ -35,7 +35,7 @@ static void *real(const char *name, void **cache) {
 #define STRCMP "strcmp"
 #define ABORT "_ZN2nn4diag6detail9AbortImplEv"
 
-static void *real_open, *real_strcmp, *real_abort;
+static void *real_open, *real_abort;
 
 static u32 open_file(void *handle, const char *path, int mode) {
     char p[TEXT];

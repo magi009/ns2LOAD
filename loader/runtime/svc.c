@@ -855,7 +855,18 @@ int nx2_svc(u64 *r, u32 n) {
         // heap, 250 MB in its HeapDef file, which is the program alone on its console; main+5c9f58, log, 2026-11-24. Here the host's
         // share is in use as well. So the game is told of a console with its heap and a program of 128 MB, and nothing else.)
         if ((type == 6 || type == 7 || type == 21 || type == 22) && heap_max) {
-            r[0] = 0, r[1] = (128ull << 20) + (type == 6 || type == 21 ? heap_max : 0);
+            // (The program, as told: its modules and 16 MB for its stacks, 128 MB at the most. 128 MB always was more than the
+            // "Program" heap of a Switch 1 game's HeapDef, Super Mario Bros. Wonder's, whose modules are 70 MB: it ended itself;
+            // log, 2026-11-26.)
+            static u64 program;
+            if (!program) {
+                u64 bytes = 16ull << 20;
+                for (unsigned k = 0; k < nx2_module_count; k++) bytes += nx2_modules[k].end;
+                bytes = (bytes + 0xFFFFF) & ~0xFFFFFull;
+                program = bytes < (128ull << 20) ? bytes : (128ull << 20);
+                nx2_log("[nx2] the game is told its program is %u MB of the memory in use (its modules, and 16 MB for stacks)\n", program >> 20);
+            }
+            r[0] = 0, r[1] = program + (type == 6 || type == 21 ? heap_max : 0);
             return 1;
         }
 #endif

@@ -983,7 +983,12 @@ int nx2_svc(u64 *r, u32 n) {
         return 0;
     case 0x2C:
     case 0x2D: {  // MapPhysicalMemory, UnmapPhysicalMemory(address, size): done here, so that what the kernel says is seen
-        const u32 rc = n == 0x2C ? svcMapPhysicalMemory((void *)r[0], r[1]) : svcUnmapPhysicalMemory((void *)r[0], r[1]);
+        if (n == 0x2D && nx2_vam_unmap_physical(r[0], r[1])) {  // (memory vam.c put there: cleared, kept)
+            r[0] = 0;
+            return 1;
+        }
+        u32 rc = n == 0x2C ? svcMapPhysicalMemory((void *)r[0], r[1]) : svcUnmapPhysicalMemory((void *)r[0], r[1]);
+        if (n == 0x2C && rc) rc = nx2_vam_map_physical(r[0], r[1], rc);  // (refused, over a title with no system resource: vam.c)
         static u64 mapped;
         static u32 said;
         const u64 now = n == 0x2C ? __atomic_add_fetch(&mapped, rc ? 0 : r[1], __ATOMIC_RELAXED) : __atomic_sub_fetch(&mapped, rc ? 0 : r[1], __ATOMIC_RELAXED);

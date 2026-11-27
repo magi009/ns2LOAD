@@ -856,7 +856,15 @@ int nx2_svc(u64 *r, u32 n) {
         // (The "system resource" (16: its size, 17: how much of it is used), while vam.c's pool stands in for it: the game is
         // told of the one it was made for. Told of none, a game's SDK ended it at its start, the question asked last before
         // the end: Kirby and the Forgotten Land, Switch 2 Edition, over a title that has none; log, 2026-11-27.)
-        if ((type == 16 || type == 17) && nx2_vam && nx2_sysres_made_for) {
+        // (and the region the SDK keeps its own address regions in, the "alias" region (2: where, 3: how large, 28: the
+        // part of it more than the kernel's least), as the pool: vam.c, nx2_vam_map_physical)
+        if ((type == 2 || type == 3 || type == 28) && nx2_vam_sdk() && (u32)r[2] == 0xFFFF8001u) {
+            r[0] = 0, r[1] = type == 2 ? nx2_vam_pool_base() : type == 3 ? nx2_vam_pool_size() : 0;
+            static int said;
+            if (said++ < 3) nx2_log("[vam] the game asks where its alias region is (%u): told the pool's, %x\n", (u64)type, r[1]);
+            return 1;
+        }
+        if ((type == 16 || type == 17) && nx2_vam_sdk()) {
             const u64 used = nx2_vam_mapped();
             r[0] = 0, r[1] = type == 16 ? nx2_sysres_made_for : (used < nx2_sysres_made_for ? used : nx2_sysres_made_for);
             static int said;

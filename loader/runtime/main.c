@@ -404,6 +404,10 @@ int main(int argc, char **argv) {
                     fclose(b);
                 }
             }
+            {  // (<folder>/novamsdk: the game's SDK isn't told of a system resource, nor of the pool as its region; vam.c)
+                FILE *f = fopen(NX2_F("novamsdk"), "rb");
+                if (f) nx2_novamsdk = 1, fclose(f), nx2_log("[nx2] <folder>/novamsdk is there: the pool answers the game's calls, and the SDK keeps none of its own\n");
+            }
             {  // (<folder>/nonvdrv: no stand-in for the graphics driver's service, nvdrv)
                 FILE *nv = fopen(NX2_F("nonvdrv"), "rb");
                 if (nv) {

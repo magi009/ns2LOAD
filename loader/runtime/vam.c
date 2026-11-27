@@ -51,17 +51,18 @@ u64 nx2_vam_init(u64 base, u64 host, u64 mb) {
     if (!mb) mb = 1024;
     const u64 want = (mb << 20) & ~(u64)(VAM_ALIGN - 1);
     void *at = NULL;
-    const u32 rc = svcSetHeapSize(&at, host + want);
+    const u64 pad = ((base + host + 0x1FFFFF) & ~0x1FFFFFull) - (base + host);  // (the pool starts on 2 MB, as a region of the kernel's does)
+    const u32 rc = svcSetHeapSize(&at, host + pad + want);
     nx2_log("[vam] a pool of %u MB for the game's address regions, after the host's %u MB of the kernel's heap: %x%s\n", want >> 20, host >> 20, (u64)rc,
             rc ? " (REFUSED: the game's calls go to its SDK, as without <folder>/vam)" : "");
     if (rc) {
         svcSetHeapSize(&at, host);
         return 0;
     }
-    pool_base = base + host;
+    pool_base = base + host + pad;
     pool_size = want;
     nx2_vam = 1;
-    return want;
+    return pad + want;
 }
 
 static u32 allocate_region(u64 *out, u64 size) {
@@ -142,8 +143,9 @@ static usage_t usage(void) {
     return u;
 }
 
+int nx2_vam_sdk(void);
 void *nx2_vam_override(const char *name) {
-    if (!nx2_vam) return NULL;
+    if (!nx2_vam || nx2_vam_sdk()) return NULL;  // (the SDK keeps its regions itself, in the pool: below)
     static const struct {
         const char *name;
         void *with;
@@ -165,93 +167,38 @@ void *nx2_vam_override(const char *name) {
 
 u64 nx2_vam_mapped(void) { return __atomic_load_n(&mapped, __ATOMIC_RELAXED); }
 
-// ---------------------------------------------------------------- MapPhysicalMemory, stood in for
-// A later SDK maps memory into its address regions itself, with the kernel's MapPhysicalMemory, once it is told the program
-// has a system resource (above, svc.c). Over a title that has none the kernel refuses it (fa01, "out of resource"), and the SDK
-// ended the game at its start: Kirby and the Forgotten Land, Switch 2 Edition, over Pokopia; log, 2026-11-27. So where the kernel
-// refuses, the memory is put there from the pool another way: as "code memory" of the program's own, mapped at the address asked
-// (the kernel keeps that kind in the same region of the address space as what MapPhysicalMemory maps), or else with MapMemory.
-// Memory is put there by 2 MB at a time, so that a game's many small mappings cost few handles; it is kept, and only cleared,
-// when the game unmaps it.
-enum { PM_BLOCK = 0x200000, PM_MAX = 4096 };
-static struct {
-    u64 at, size;
-    u8 how;  // 1: code memory, 2: MapMemory
-} pm[PM_MAX];
-static u32 pm_count;
-static int pm_lock;
-static u32 pm_said;
+// ---------------------------------------------------------------- the SDK's own address regions, in the pool
+// A later SDK keeps its address regions itself, once it is told the program has a system resource (svc.c): it takes them from
+// the part of the address space the kernel keeps for such mappings (the "alias" region, GetInfo 2 and 3) and maps memory into
+// them with the kernel's MapPhysicalMemory. Over a title that has no system resource the kernel refuses that (fa01), and the SDK
+// ended the game at its start: Kirby and the Forgotten Land, Switch 2 Edition, over Pokopia; log, 2026-11-27. (Mapping the
+// pool's memory there as code memory instead had the kernel end the program at once: the title may not make code memory.)
+// So the SDK is told that region is the pool, which is memory the program has already: a MapPhysicalMemory there is "done" at
+// once, and an UnmapPhysicalMemory clears what it covers. The SDK's own regions are then the SDK's to keep, and the pool's are
+// not given out as well (nx2_vam_override, above, stands aside). <folder>/novamsdk: not so (the pool answers the game's calls
+// instead, as before).
+int nx2_novamsdk;
+int nx2_vam_sdk(void) { return nx2_vam && nx2_sysres_made_for && !nx2_novamsdk; }
+u64 nx2_vam_pool_base(void) { return pool_base; }
+u64 nx2_vam_pool_size(void) { return pool_size; }
 
-static int pm_covers(u64 a) {
-    for (u32 k = 0; k < pm_count; k++)
-        if (a - pm[k].at < pm[k].size) return 1;
-    return 0;
-}
-static int pm_touches(u64 a, u64 size) {
-    for (u32 k = 0; k < pm_count; k++)
-        if (pm[k].at < a + size && a < pm[k].at + pm[k].size) return 1;
-    return 0;
-}
-// one piece, from the pool, put at `at`: how it was done (0: it couldn't be)
-static int pm_put(u64 at, u64 size) {
-    if (pm_count >= PM_MAX) return 0;
-    u64 src = 0;
-    if (allocate_region(&src, size)) return 0;
-    Handle h = 0;
-    u32 rc = svcCreateCodeMemory(&h, (void *)src, size);
-    u32 rc2 = rc ? rc : svcControlCodeMemory(h, CodeMapOperation_MapOwner, (void *)at, size, Perm_Rw);
-    int how = 0;
-    if (!rc && !rc2) how = 1;
-    else {
-        if (!rc) svcCloseHandle(h);
-        if (!svcMapMemory((void *)at, (void *)src, size)) how = 2;
-    }
-    if (pm_said < 12 || !how) {
-        pm_said++;
-        nx2_log("[vam] MapPhysicalMemory refused by the kernel: %x bytes at %x put there from the pool %s (code memory: %x, %x)\n", size, at,
-                how == 1 ? "as code memory" : how == 2 ? "with MapMemory" : "NOT: neither way was let", (u64)rc, (u64)rc2);
-    }
-    if (!how) {
-        free_region(src);
-        return 0;
-    }
-    pm[pm_count].at = at, pm[pm_count].size = size, pm[pm_count].how = (u8)how;
-    pm_count++;
-    __atomic_add_fetch(&mapped, size, __ATOMIC_RELAXED);
-    return how;
-}
-
-// (svc.c, after the kernel refused MapPhysicalMemory(address, size): 0 when it is mapped now, or the kernel's result again)
+// (svc.c, MapPhysicalMemory(address, size) refused by the kernel: 0 when it is the pool's memory, or the kernel's result again)
 u32 nx2_vam_map_physical(u64 address, u64 size, u32 refused) {
-    if (!nx2_vam || !size || (address | size) & 0xFFF) return refused;
-    while (__atomic_exchange_n(&pm_lock, 1, __ATOMIC_ACQUIRE)) svcSleepThread(0);
-    u32 rc = 0;
-    for (u64 p = address, end = address + size; p < end && !rc;) {
-        if (pm_covers(p)) {
-            p += 0x1000;
-            continue;
-        }
-        const u64 block = p & ~(u64)(PM_BLOCK - 1);
-        if (!pm_touches(block, PM_BLOCK) && pm_put(block, PM_BLOCK)) {
-            p = block + PM_BLOCK;
-            continue;
-        }
-        u64 q = p;  // (the block couldn't be had whole: what is asked of it alone)
-        while (q < end && q < block + PM_BLOCK && !pm_covers(q)) q += 0x1000;
-        if (pm_put(p, q - p)) p = q;
-        else rc = refused;
+    if (!nx2_vam_sdk() || !in_pool(address, size)) {
+        static u32 said;
+        if (nx2_vam_sdk() && said++ < 8) nx2_log("[vam] MapPhysicalMemory of %x bytes at %x: outside the pool, as the kernel refused it\n", size, address);
+        return refused;
     }
-    __atomic_store_n(&pm_lock, 0, __ATOMIC_RELEASE);
-    return rc;
+    const u64 now = __atomic_add_fetch(&mapped, size, __ATOMIC_RELAXED);
+    static u32 said;
+    if (said++ < 8 || nx2_debug) nx2_log("[vam] MapPhysicalMemory of %x bytes at %x: the pool's memory, there already (%u KB mapped so)\n", size, address, now >> 10);
+    return 0;
 }
 
-// (svc.c, before UnmapPhysicalMemory: 1 when the range is all memory put here, now cleared; 0: the kernel's to answer)
+// (svc.c, before UnmapPhysicalMemory: 1 when the range is the pool's, now cleared; 0: the kernel's to answer)
 int nx2_vam_unmap_physical(u64 address, u64 size) {
-    if (!nx2_vam || !pm_count || !size) return 0;
-    while (__atomic_exchange_n(&pm_lock, 1, __ATOMIC_ACQUIRE)) svcSleepThread(0);
-    int all = 1;
-    for (u64 p = address & ~0xFFFull; p < address + size && all; p += 0x1000) all = pm_covers(p);
-    __atomic_store_n(&pm_lock, 0, __ATOMIC_RELEASE);
-    if (all) zero(address, size);
-    return all;
+    if (!nx2_vam_sdk() || !in_pool(address, size)) return 0;
+    zero(address, size);
+    __atomic_sub_fetch(&mapped, size, __ATOMIC_RELAXED);
+    return 1;
 }

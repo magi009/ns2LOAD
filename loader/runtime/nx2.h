@@ -107,6 +107,8 @@ void nx2_heap_pool(u64 mb);  // svc.c: a pool for the game's address regions put
 
 // vam.c: the SDK's address regions answered from a pool of the heap, for a title with no system resource (<folder>/vam)
 extern int nx2_vam;
+extern u64 nx2_sysres_made_for;
+u64 nx2_vam_mapped(void);
 u64 nx2_vam_init(u64 base, u64 host, u64 mb);  // the pool taken: its bytes, or 0
 void *nx2_vam_override(const char *name);       // the imports it answers, or null
 // peek.c: with <folder>/debug, the paths the game opens and the strings it compares, said when it ends itself

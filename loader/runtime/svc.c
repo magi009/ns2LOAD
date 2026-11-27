@@ -853,6 +853,18 @@ int nx2_svc(u64 *r, u32 n) {
         // Memory in use (7, and 22 without the system's part): the host library has taken nearly all of it for its own heap, so a
         // game that sizes its heap by what is free (total - used) got 2 MB and its first large allocation failed (A game's nninitStartup; log, 2026-11-22). What's free, as the game is told, is the block set aside for its heap.
         const u32 type = (u32)r[1];
+        // (The "system resource" (16: its size, 17: how much of it is used), while vam.c's pool stands in for it: the game is
+        // told of the one it was made for. Told of none, a game's SDK ended it at its start, the question asked last before
+        // the end: Kirby and the Forgotten Land, Switch 2 Edition, over a title that has none; log, 2026-11-27.)
+        if ((type == 16 || type == 17) && nx2_vam && nx2_sysres_made_for) {
+            const u64 used = nx2_vam_mapped();
+            r[0] = 0, r[1] = type == 16 ? nx2_sysres_made_for : (used < nx2_sysres_made_for ? used : nx2_sysres_made_for);
+            static int said;
+            if (said++ < 4)
+                nx2_log("[vam] the game asks of its system resource (%u): told %u KB, as it was made for (the pool stands in for it)\n", (u64)type,
+                        r[1] >> 10);
+            return 1;
+        }
 #ifdef NX2_GAME_MB
         // (A Switch 2 game's own: a game ends itself at its start unless the memory in use is less than its "Program"
         // heap, 250 MB in its HeapDef file, which is the program alone on its console; main+5c9f58, log, 2026-11-24. Here the host's

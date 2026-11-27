@@ -278,7 +278,8 @@ int main(int argc, char **argv) {
                 u64 there = 0;
                 if (R_SUCCEEDED(svcGetInfo(&there, 16, CUR_PROCESS_HANDLE, 0))) {
                     const u64 made_for = (u64)NX2_GAME_SYSRES_KB << 10;
-                    if (!there && made_for) vam_auto = 1;  // (the pool is taken for it, below, unless <folder>/vam says otherwise)
+                    if (!there && made_for) vam_auto = 1;
+                    { extern u64 nx2_sysres_made_for; nx2_sysres_made_for = made_for; }  // (the pool is taken for it, below, unless <folder>/vam says otherwise)
                     nx2_log("[nx2] memory the system keeps for a program's own mappings (\"system resource\"): the title this was started over has %u MB; the game was made for %u MB%s\n",
                             there >> 20, made_for >> 20,
                             !there && made_for ? ". THERE IS NONE: a game that maps memory as it runs can't here, and may end at its start. Started over a title that has some, it would have it"

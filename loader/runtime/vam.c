@@ -23,6 +23,7 @@
 enum { VAM_MAX = 8192, VAM_ALIGN = 0x10000 };
 
 int nx2_vam;          // the pool is in use (<folder>/vam)
+u64 nx2_sysres_made_for;  // the game's own "system resource" (main.c): what it is told it has while the pool stands in for it
 static u64 pool_base, pool_size;
 static struct {
     u64 at, size;     // a region: where it is in the pool, how large (rounded to VAM_ALIGN)
@@ -161,3 +162,5 @@ void *nx2_vam_override(const char *name) {
         }
     return NULL;
 }
+
+u64 nx2_vam_mapped(void) { return __atomic_load_n(&mapped, __ATOMIC_RELAXED); }

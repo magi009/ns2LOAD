@@ -360,6 +360,7 @@ static int listed(const char *list, const char *name) {
 }
 // (the ones no stand-in is of use for: with nothing behind them there is no picture, no pad, no file)
 static int never_stood(const char *n) {
+    if (nx2_nvdrv_stands(n)) return 0;  // (the graphics driver's, of a Switch game: answered by nvdrv.c, nothing drawn)
     static const char *const core[] = {"nv", "vi:", "dispdrv", "gsv", "hid", "fsp", "applet", "aud", "ldr", "sm:", "lm", "apm", "set", "time", "pl:"};
     for (u32 k = 0; k < sizeof core / sizeof *core; k++)
         if (starts(n, core[k])) return 1;
@@ -373,6 +374,7 @@ static int never_stood(const char *n) {
 #define STOOD_HANDLE(h) (((u32)(h) & 0xF0000000u) == 0x40000000u)
 static u32 stood_handles;
 static u32 stood_handle(void) { return 0x40000000u | (1 + (__atomic_fetch_add(&stood_handles, 1, __ATOMIC_RELAXED) & 0x0FFFFFFFu)); }
+u32 nx2_stood_handle(void) { return stood_handle(); }
 static void stood_set(u32 h, int domain, u32 index, const char *service) {
     char name[16] = {'~', domain == 2 ? 's' : domain ? 'd' : 'n', (char)('A' + index)};  // (2: a session one of these handed back)
     u32 n = 3;
@@ -429,6 +431,7 @@ static void stood_answer(u64 *r, u8 *m, u32 h, const char *who) {
         r[0] = 0xF601;
         return;
     }
+    if (!control && nx2_nvdrv_stands(who + 3) && nx2_nvdrv_answer(r, m, domain)) return;  // (nvdrv: its own answers)
     // What an answer carries is the command's own to say, and here the command is unknown. A command that hands back a session,
     // or an event to wait on, is asked once or a few times; one asked at every picture hands back numbers. So the first four
     // answers to each command carry a handle of either kind (an SDK that expected none leaves them be), and the later ones none:

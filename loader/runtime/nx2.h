@@ -159,6 +159,11 @@ void nx2_log_wait(int on);  // 1: every line is on the card before nx2_log retur
 // one (a Switch 2, 2026-11-23). It is on when the file <folder>/debug is there (empty will do). Without it the log still has
 // what ends a game: a request the system refused, a function called for the first time, the SDK's own abort.
 extern int nx2_debug;
+// nvdrv.c: the graphics driver's service stood in for, where the started-over title may not open it (phase 1: nothing drawn)
+extern int nx2_nonvdrv;
+int nx2_nvdrv_stands(const char *service);
+int nx2_nvdrv_answer(u64 *r, u8 *message, int domain);
+u32 nx2_stood_handle(void);
 extern int nx2_ownapplet;  // the SDK registers with the system itself, as on a Switch (<folder>/ownapplet)
 extern int nx2_noplt;  // calls between modules go straight to the function, none logged (<folder>/noplt)
 extern int nx2_stackwatch;  // a thread's stack left at each system call, its least said (<folder>/stackwatch)

@@ -403,6 +403,14 @@ int main(int argc, char **argv) {
                     fclose(b);
                 }
             }
+            {  // (<folder>/nonvdrv: no stand-in for the graphics driver's service, nvdrv)
+                FILE *nv = fopen(NX2_F("nonvdrv"), "rb");
+                if (nv) {
+                    nx2_nonvdrv = 1;
+                    fclose(nv);
+                    nx2_log("[nx2] <folder>/nonvdrv is there: nvdrv isn't stood in for\n");
+                }
+            }
             {  // (<folder>/refuse: services treated as refused, to see the port's stand-in for one at work)
                 extern char nx2_refuse[200];
                 FILE *refuse = fopen(NX2_F("refuse"), "rb");

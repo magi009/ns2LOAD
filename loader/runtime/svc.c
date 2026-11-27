@@ -15,6 +15,8 @@ void nx2_heap_set(void *base, u64 size) { heap_base = base, heap_max = size; }
 // the game is told it has, and the most it may ask as a heap.
 static u64 live_base, live_host;
 void nx2_heap_live(u64 base, u64 host, u64 most) { live_base = base, live_host = host, heap_max = most; }
+u64 nx2_heap_game_now(void) { return heap_now; }
+void nx2_heap_host_grew(u64 bytes) { live_host += bytes; }  // (vam.c: the pool, made larger; the game's heap comes after it)
 // (<folder>/vam: the pool for the game's address regions comes after the host's part, before the game's heap, and is the host's
 // from then on: the game's SetHeapSize makes the kernel's heap the host's part, the pool and what it asks; vam.c)
 void nx2_heap_pool(u64 mb) {

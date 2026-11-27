@@ -25,7 +25,12 @@ enum { VAM_MAX = 8192, VAM_ALIGN = 0x10000 };
 int nx2_vam;          // the pool is in use (<folder>/vam)
 u64 nx2_sysres_made_for;  // the game's own "system resource" (main.c): what it is told it has while the pool stands in for it
 static u64 pool_base, pool_size;
-static u64 alias_base, alias_size;  // (the kernel's own alias region: nx2_vam_hide_alias, below)
+static u64 alias_base, alias_size;
+// (While the SDK keeps its own regions in the pool: the region it is told of reaches past the pool, as far as the kernel's heap
+// may grow, and the pool grows to meet what the SDK maps there. A game's SDK set out to keep 24 GB of address space for one
+// allocator of the game's at its start, and ended the game when told its region was the pool's 1024 MB: Kirby, main+6642a8, its
+// code read from the log, 2026-11-27. Only address space: memory is taken only as it is mapped.)
+static u64 heap_base_k, heap_region_end, told_size;  // (the kernel's own alias region: nx2_vam_hide_alias, below)
 static struct {
     u64 at, size;     // a region: where it is in the pool, how large (rounded to VAM_ALIGN)
 } regions[VAM_MAX];
@@ -64,6 +69,18 @@ u64 nx2_vam_init(u64 base, u64 host, u64 mb) {
     svcGetInfo(&alias_size, InfoType_AliasRegionSize, CUR_PROCESS_HANDLE, 0);
     pool_base = base + host + pad;
     pool_size = want;
+    heap_base_k = base;
+    {
+        u64 hb = 0, hs = 0;
+        svcGetInfo(&hb, InfoType_HeapRegionAddress, CUR_PROCESS_HANDLE, 0);
+        svcGetInfo(&hs, InfoType_HeapRegionSize, CUR_PROCESS_HANDLE, 0);
+        heap_region_end = hb + hs;
+        u64 room = heap_region_end > pool_base ? (heap_region_end - pool_base) & ~0x1FFFFFull : 0;
+        if (room > (64ull << 30)) room = 64ull << 30;
+        told_size = room > want ? room : want;
+        nx2_log("[vam] the kernel's heap region: %x, %u MB; the alias region %x, %u MB; the SDK may be told of %u MB from the pool on\n", hb, hs >> 20,
+                alias_base, alias_size >> 20, told_size >> 20);
+    }
     nx2_vam = 1;
     return pad + want;
 }
@@ -202,24 +219,47 @@ void nx2_vam_hide_alias(void *info, u64 q) {
         mi->type = 0x10;
     }
 }
-u64 nx2_vam_pool_size(void) { return pool_size; }
+u64 nx2_vam_pool_size(void) { return nx2_vam_sdk() ? told_size : pool_size; }
 
 // (svc.c, MapPhysicalMemory(address, size) refused by the kernel: 0 when it is the pool's memory, or the kernel's result again)
 u32 nx2_vam_map_physical(u64 address, u64 size, u32 refused) {
-    if (!nx2_vam_sdk() || !in_pool(address, size)) {
-        static u32 said;
-        if (nx2_vam_sdk() && said++ < 8) nx2_log("[vam] MapPhysicalMemory of %x bytes at %x: outside the pool, as the kernel refused it\n", size, address);
+    static u32 said;
+    if (!nx2_vam_sdk() || address < pool_base || size > told_size || address - pool_base > told_size - size) {
+        if (nx2_vam_sdk() && said++ < 8) nx2_log("[vam] MapPhysicalMemory of %x bytes at %x: outside the region told, as the kernel refused it\n", size, address);
         return refused;
     }
+    const u64 need = address + size - pool_base;
+    if (need > pool_size) {  // (past the pool: the kernel's heap made larger, if the game's own heap isn't after it)
+        lock();
+        u32 rc = 0;
+        if (need > pool_size) {
+            if (nx2_heap_game_now()) rc = refused;
+            else {
+                const u64 grown = (need + (64ull << 20) - 1) & ~((64ull << 20) - 1);
+                const u64 to = grown < told_size ? grown : told_size;
+                void *at = NULL;
+                rc = svcSetHeapSize(&at, pool_base - heap_base_k + to);
+                static u32 grew;
+                if (rc || grew++ < 8 || (grew & (grew - 1)) == 0)
+                    nx2_log("[vam] the pool made %u MB for the SDK's mapping at %x: %x%s\n", to >> 20, address, (u64)rc, rc ? " (REFUSED)" : "");
+                if (!rc) nx2_heap_host_grew(to - pool_size), pool_size = to;
+            }
+        }
+        unlock();
+        if (rc) {
+            nx2_log("[vam] MapPhysicalMemory of %x bytes at %x: the pool couldn't be made larger%s\n", size, address, nx2_heap_game_now() ? " (the game's heap is after it)" : "");
+            return refused;
+        }
+    }
     const u64 now = __atomic_add_fetch(&mapped, size, __ATOMIC_RELAXED);
-    static u32 said;
     if (said++ < 8 || nx2_debug) nx2_log("[vam] MapPhysicalMemory of %x bytes at %x: the pool's memory, there already (%u KB mapped so)\n", size, address, now >> 10);
     return 0;
 }
 
 // (svc.c, before UnmapPhysicalMemory: 1 when the range is the pool's, now cleared; 0: the kernel's to answer)
 int nx2_vam_unmap_physical(u64 address, u64 size) {
-    if (!nx2_vam_sdk() || !in_pool(address, size)) return 0;
+    if (!nx2_vam_sdk() || address < pool_base || size > told_size || address - pool_base > told_size - size) return 0;
+    if (!in_pool(address, size)) return 1;  // (never mapped: nothing to clear)
     zero(address, size);
     __atomic_sub_fetch(&mapped, size, __ATOMIC_RELAXED);
     return 1;

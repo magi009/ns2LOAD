@@ -115,6 +115,8 @@ extern int nx2_novamsdk;
 int nx2_vam_sdk(void);
 u64 nx2_vam_pool_base(void);
 u64 nx2_vam_pool_size(void);
+u64 nx2_heap_game_now(void);
+void nx2_heap_host_grew(u64 bytes);
 void nx2_vam_hide_alias(void *memory_info, u64 queried);  // (a MemoryInfo)
 u64 nx2_vam_init(u64 base, u64 host, u64 mb);  // the pool taken: its bytes, or 0
 void *nx2_vam_override(const char *name);       // the imports it answers, or null

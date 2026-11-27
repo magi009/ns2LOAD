@@ -282,7 +282,11 @@ static const struct {
     // a size it keeps is 0x22bf2ec30 or less, main+661c04 and main+661ccc), and then keeps 10 GB more for another allocator
     // (main+661c68..84), which together are more than the 11962 MB the pool's region has. So those checks are let pass, and the
     // other allocator is given 2 GB (its movk of the high half left out). Read from its code, dumped where it stood; log, 2026-11-27.
-    {"main", 0x6642a8, 0xD2C000A3u, 0xD2C00023u, "Kirby's main allocator: 20 GB of address space asked, 4 GB given"},
+    // (and then: its main allocator took 2.8 GB at once, and a third allocator asked 5 GB more, main+661e60..7c, and the SDK
+    // ended it there. The pool's memory is all of one piece from its start, so the room an allocator keeps and doesn't use is
+    // memory taken all the same: main given 3 GB, the third 1 GB (its movk of the high half left out); log, 2026-11-27.)
+    {"main", 0x6642a8, 0xD2C000A3u, 0xD2B80003u, "Kirby's main allocator: 20 GB of address space asked, 3 GB given"},
+    {"main", 0x661e7c, 0xF2C00023u, 0xD503201Fu, "Kirby's third allocator: 5 GB of address space asked, 1 GB given"},
     {"main", 0x661c04, 0x54000FE9u, 0xD503201Fu, "Kirby's check that its main allocator has more than 8895 MB: let pass"},
     {"main", 0x661ccc, 0x540009C9u, 0xD503201Fu, "the same check, the second time: let pass"},
     {"main", 0x661c84, 0xF2C00043u, 0xD503201Fu, "Kirby's second allocator: 10 GB of address space asked, 2 GB given"},

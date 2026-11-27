@@ -204,6 +204,20 @@ static void game_callers_said(const u64 *r) {
         module = "?", off = from;
         nx2_where(from, &module, &off);
         nx2_log("[from]   the game's caller %u: %s+%x\n", (u64)k, module, off);
+        // (the game's own code before the first two of its callers in main, as bytes, to be read where its source isn't: what the
+        // game checked before it ended itself. <folder>/debug)
+        static int dumped;
+        if (nx2_debug && dumped < 2 && module[0] == 'm' && module[1] == 'a' && module[2] == 'i' && module[3] == 'n' && !module[4]) {
+            dumped++;
+            const u8 *code = (const u8 *)(from - 0x400);
+            for (u32 o = 0; o < 0x440; o += 32) {
+                char line[80];
+                static const char hex[] = "0123456789abcdef";
+                for (u32 b = 0; b < 32; b++) line[2 * b] = hex[code[o + b] >> 4], line[2 * b + 1] = hex[code[o + b] & 15];
+                line[64] = 0;
+                nx2_log("[code] main+%x %s\n", off - 0x400 + o, line);
+            }
+        }
         if (fp[0] <= (u64)fp || fp[0] - (u64)fp > 0x400000) break;
         fp = (const u64 *)fp[0];
     }

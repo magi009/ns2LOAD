@@ -129,6 +129,7 @@ int nx2_map_modules(void) {
             nx2_log("[load] %s: %u of its %u system calls are further into its code than a branch reaches: their thunks are after the code\n", m->name,
                     (u64)far_count, (u64)im->nsvcs);
         }
+        nx2_code_patches(m->name, nro + shift, im->ro_off);
         nx2_log("[load] %s: to be mapped whole by the loader service: an image of %u KB at %p, %u KB of bss at %p\n", m->name, nro_size >> 10, (u64)nro, bss_size >> 10,
                 (u64)bss);
         nx2_log_flush();

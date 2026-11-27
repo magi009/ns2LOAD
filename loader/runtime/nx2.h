@@ -115,6 +115,7 @@ extern int nx2_novamsdk;
 int nx2_vam_sdk(void);
 u64 nx2_vam_pool_base(void);
 u64 nx2_vam_pool_size(void);
+void nx2_code_patches(const char *module, u8 *code, u64 code_size);
 u64 nx2_heap_game_now(void);
 void nx2_heap_host_grew(u64 bytes);
 void nx2_vam_hide_alias(void *memory_info, u64 queried);  // (a MemoryInfo)

@@ -264,3 +264,29 @@ int nx2_vam_unmap_physical(u64 address, u64 size) {
     __atomic_sub_fetch(&mapped, size, __ATOMIC_RELAXED);
     return 1;
 }
+
+// ---------------------------------------------------------------- what a game asks of its region, made to fit
+// The region the SDK is told of can only be as large as the kernel's heap may grow from the pool on (11962 MB of 12288, on a
+// console; log, 2026-11-27). A game that keeps more address space than that for one allocator at its start ends there. Such a
+// game's own request is made smaller where it is known, in its code, before the code is mapped: only when the instruction there
+// is the one expected (another game, or another version of it, is left as it is), and only while the pool stands in.
+static const struct {
+    const char *module;
+    u32 at, was, now;
+    const char *what;
+} patches[] = {
+    // Kirby and the Forgotten Land (Switch 2 Edition, 04004d300c5ae001): its main allocator, 20 GB of address space (movz x3,
+    // #5, lsl #32 before the allocator's constructor, main+6642a8); made 8 GB (movz x3, #2, lsl #32). Read from its code, dumped
+    // at its abort over Pokopia; log, 2026-11-27.
+    {"main", 0x6642a8, 0xD2C000A3u, 0xD2C00043u, "Kirby's main allocator: 20 GB of address space asked, 8 GB given"},
+};
+void nx2_code_patches(const char *module, u8 *code, u64 code_size) {
+    if (!nx2_vam_sdk() || told_size >= (20ull << 30)) return;
+    for (u32 k = 0; k < sizeof patches / sizeof *patches; k++) {
+        if (strcmp(module, patches[k].module) || patches[k].at + 4 > code_size) continue;
+        u32 *word = (u32 *)(code + patches[k].at);
+        if (*word != patches[k].was) continue;
+        *word = patches[k].now;
+        nx2_log("[vam] %s+%x changed: %s (the region told is %u MB)\n", module, (u64)patches[k].at, patches[k].what, told_size >> 20);
+    }
+}

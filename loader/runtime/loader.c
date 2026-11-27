@@ -723,7 +723,8 @@ static void watch(void *arg) {
         // as bytes, to be read where the game's source isn't: what a game that stands still is waiting on. Kirby stood at main+661e00,
         // look after look, with no word; log, 2026-11-27.)
         if (n == 12 && nx2_module_count && c.pc.x - (u64)nx2_modules[0].text < nx2_modules[0].data_off) {
-            for (int k = 0; k < 30; k += 6)
+            nx2_log("[code] x24.. %x %x %x %x %x, fp %x\n", c.cpu_gprs[24].x, c.cpu_gprs[25].x, c.cpu_gprs[26].x, c.cpu_gprs[27].x, c.cpu_gprs[28].x, c.fp);
+            for (int k = 0; k < 24; k += 6)
                 nx2_log("[code] x%d.. %x %x %x %x %x %x\n", (s64)k, c.cpu_gprs[k].x, c.cpu_gprs[k + 1].x, c.cpu_gprs[k + 2].x, c.cpu_gprs[k + 3].x,
                         c.cpu_gprs[k + 4].x, c.cpu_gprs[k + 5].x);
             const u64 spots[2][2] = {{c.pc.x & ((1ull << 39) - 1), 0x300}, {c.lr & ((1ull << 39) - 1), 0x200}};

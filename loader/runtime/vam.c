@@ -59,6 +59,8 @@ u64 nx2_vam_init(u64 base, u64 host, u64 mb) {
         svcSetHeapSize(&at, host);
         return 0;
     }
+    svcGetInfo(&alias_base, InfoType_AliasRegionAddress, CUR_PROCESS_HANDLE, 0);
+    svcGetInfo(&alias_size, InfoType_AliasRegionSize, CUR_PROCESS_HANDLE, 0);
     pool_base = base + host + pad;
     pool_size = want;
     nx2_vam = 1;
@@ -180,6 +182,24 @@ u64 nx2_vam_mapped(void) { return __atomic_load_n(&mapped, __ATOMIC_RELAXED); }
 int nx2_novamsdk;
 int nx2_vam_sdk(void) { return nx2_vam && nx2_sysres_made_for && !nx2_novamsdk; }
 u64 nx2_vam_pool_base(void) { return pool_base; }
+// The kernel's own alias region, which the SDK isn't told of now: it took that part of the address space for free, put the
+// time service's shared memory there, and the kernel refused that (dc01, "invalid memory region"); Kirby, log, 2026-11-27. So
+// what QueryMemory says of free memory there is said as reserved: the SDK's search for room goes on elsewhere (svc.c).
+static u64 alias_base, alias_size;
+void nx2_vam_hide_alias(MemoryInfo *mi, u64 q) {
+    if (!nx2_vam_sdk() || !alias_size || mi->type != 0) return;
+    const u64 a = mi->addr, e = mi->addr + mi->size, ab = alias_base, ae = alias_base + alias_size;
+    if (e <= ab || a >= ae) return;  // (none of it there)
+    static u32 said;
+    if (said++ < 4) nx2_log("[vam] QueryMemory of %x, free %x-%x: the part in the kernel's alias region (%x-%x) is said reserved\n", q, a, e, ab, ae);
+    if (q < ab) mi->size = ab - a;                       // (free, up to the region)
+    else if (q >= ae) mi->addr = ae, mi->size = e - ae;  // (free, from its end)
+    else {                                               // (the region's part: reserved)
+        mi->addr = a > ab ? a : ab;
+        mi->size = (e < ae ? e : ae) - mi->addr;
+        mi->type = 0x10;
+    }
+}
 u64 nx2_vam_pool_size(void) { return pool_size; }
 
 // (svc.c, MapPhysicalMemory(address, size) refused by the kernel: 0 when it is the pool's memory, or the kernel's result again)

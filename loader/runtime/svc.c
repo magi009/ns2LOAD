@@ -989,6 +989,14 @@ int nx2_svc(u64 *r, u32 n) {
                 return 1;
             }
         return 0;
+    case 0x06: {  // QueryMemory(out information, address): the kernel's alias region said reserved, while the SDK isn't told of it
+        if (!nx2_vam_sdk() || !r[0]) return 0;
+        u32 page = 0;
+        const u32 rc = svcQueryMemory((MemoryInfo *)r[0], &page, r[2]);
+        if (!rc) nx2_vam_hide_alias((MemoryInfo *)r[0], r[2]);
+        r[0] = rc, r[1] = page;
+        return 1;
+    }
     case 0x2C:
     case 0x2D: {  // MapPhysicalMemory, UnmapPhysicalMemory(address, size): done here, so that what the kernel says is seen
         if (n == 0x2D && nx2_vam_unmap_physical(r[0], r[1])) {  // (memory vam.c put there: cleared, kept)

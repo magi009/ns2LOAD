@@ -25,6 +25,7 @@ enum { VAM_MAX = 8192, VAM_ALIGN = 0x10000 };
 int nx2_vam;          // the pool is in use (<folder>/vam)
 u64 nx2_sysres_made_for;  // the game's own "system resource" (main.c): what it is told it has while the pool stands in for it
 static u64 pool_base, pool_size;
+static u64 alias_base, alias_size;  // (the kernel's own alias region: nx2_vam_hide_alias, below)
 static struct {
     u64 at, size;     // a region: where it is in the pool, how large (rounded to VAM_ALIGN)
 } regions[VAM_MAX];
@@ -185,7 +186,7 @@ u64 nx2_vam_pool_base(void) { return pool_base; }
 // The kernel's own alias region, which the SDK isn't told of now: it took that part of the address space for free, put the
 // time service's shared memory there, and the kernel refused that (dc01, "invalid memory region"); Kirby, log, 2026-11-27. So
 // what QueryMemory says of free memory there is said as reserved: the SDK's search for room goes on elsewhere (svc.c).
-static u64 alias_base, alias_size;
+
 void nx2_vam_hide_alias(MemoryInfo *mi, u64 q) {
     if (!nx2_vam_sdk() || !alias_size || mi->type != 0) return;
     const u64 a = mi->addr, e = mi->addr + mi->size, ab = alias_base, ae = alias_base + alias_size;

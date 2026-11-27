@@ -278,7 +278,14 @@ static const struct {
     // Kirby and the Forgotten Land (Switch 2 Edition, 04004d300c5ae001): its main allocator, 20 GB of address space (movz x3,
     // #5, lsl #32 before the allocator's constructor, main+6642a8); made 8 GB (movz x3, #2, lsl #32). Read from its code, dumped
     // at its abort over Pokopia; log, 2026-11-27.
-    {"main", 0x6642a8, 0xD2C000A3u, 0xD2C00043u, "Kirby's main allocator: 20 GB of address space asked, 8 GB given"},
+    // made 4 GB (movz x3, #1, lsl #32): with 8 GB, the game stood still at main+661e00 for good (a branch to itself, taken when
+    // a size it keeps is 0x22bf2ec30 or less, main+661c04 and main+661ccc), and then keeps 10 GB more for another allocator
+    // (main+661c68..84), which together are more than the 11962 MB the pool's region has. So those checks are let pass, and the
+    // other allocator is given 2 GB (its movk of the high half left out). Read from its code, dumped where it stood; log, 2026-11-27.
+    {"main", 0x6642a8, 0xD2C000A3u, 0xD2C00023u, "Kirby's main allocator: 20 GB of address space asked, 4 GB given"},
+    {"main", 0x661c04, 0x54000FE9u, 0xD503201Fu, "Kirby's check that its main allocator has more than 8895 MB: let pass"},
+    {"main", 0x661ccc, 0x540009C9u, 0xD503201Fu, "the same check, the second time: let pass"},
+    {"main", 0x661c84, 0xF2C00043u, 0xD503201Fu, "Kirby's second allocator: 10 GB of address space asked, 2 GB given"},
 };
 void nx2_code_patches(const char *module, u8 *code, u64 code_size) {
     if (!nx2_vam_sdk() || told_size >= (20ull << 30)) return;

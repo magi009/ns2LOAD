@@ -719,6 +719,28 @@ static void watch(void *arg) {
         if (!RUNNING_ONLY || n < 11 || nx2_where(c.pc.x, &m1, &o1))
         nx2_log("[watch] the main thread is at %s+%x, called from %s+%x; x0 %x, x1 %x, x8 %x, sp %x\n", m1, o1, m2, o2, c.cpu_gprs[0].x,
                 c.cpu_gprs[1].x, c.cpu_gprs[8].x, c.sp);
+        // (At the twelfth look, if the main thread is in main's code: its registers and the code around it and around its caller,
+        // as bytes, to be read where the game's source isn't: what a game that stands still is waiting on. Kirby stood at main+661e00,
+        // look after look, with no word; log, 2026-11-27.)
+        if (n == 12 && nx2_module_count && c.pc.x - (u64)nx2_modules[0].text < nx2_modules[0].data_off) {
+            for (int k = 0; k < 30; k += 6)
+                nx2_log("[code] x%d.. %x %x %x %x %x %x\n", (s64)k, c.cpu_gprs[k].x, c.cpu_gprs[k + 1].x, c.cpu_gprs[k + 2].x, c.cpu_gprs[k + 3].x,
+                        c.cpu_gprs[k + 4].x, c.cpu_gprs[k + 5].x);
+            const u64 spots[2][2] = {{c.pc.x & ((1ull << 39) - 1), 0x300}, {c.lr & ((1ull << 39) - 1), 0x200}};
+            for (int s = 0; s < 2; s++) {
+                const char *mm = "?";
+                u64 oo = 0;
+                if (!nx2_where(spots[s][0], &mm, &oo) || strcmp(mm, "main")) continue;
+                const u8 *code = (const u8 *)((spots[s][0] - spots[s][1]) & ~31ull);
+                for (u64 o = 0; o < spots[s][1] + 0x80; o += 32) {
+                    char line[80];
+                    static const char hex[] = "0123456789abcdef";
+                    for (u32 b = 0; b < 32; b++) line[2 * b] = hex[code[o + b] >> 4], line[2 * b + 1] = hex[code[o + b] & 15];
+                    line[64] = 0;
+                    nx2_log("[code] main+%x %s\n", (u64)code + o - (u64)nx2_modules[0].text, line);
+                }
+            }
+        }
         // (and, from the fourth look on, where each of the game's other threads is and who called it there, by its frames: a game
         // that shows nothing and ends nothing is waiting somewhere; a game, a Switch 2, 2026-11-23)
         extern u32 nx2_threads[96];

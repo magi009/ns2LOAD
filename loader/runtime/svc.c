@@ -207,7 +207,9 @@ static void game_callers_said(const u64 *r) {
         // (the game's own code before the first two of its callers in main, as bytes, to be read where its source isn't: what the
         // game checked before it ended itself. <folder>/debug)
         static int dumped;
-        if (nx2_debug && dumped < 2 && module[0] == 'm' && module[1] == 'a' && module[2] == 'i' && module[3] == 'n' && !module[4]) {
+        const int in_main = nx2_module_count && from >= (u64)nx2_modules[0].text && from - (u64)nx2_modules[0].text < nx2_modules[0].data_off;
+        if (k == 0) nx2_log("[code] the game's code before its callers in main is written below (main at %p, %x bytes of code)\n", (u64)nx2_modules[0].text, (u64)nx2_modules[0].data_off);
+        if (dumped < 2 && in_main) {
             dumped++;
             const u8 *code = (const u8 *)(from - 0x400);
             for (u32 o = 0; o < 0x440; o += 32) {

@@ -115,7 +115,7 @@ extern int nx2_novamsdk;
 int nx2_vam_sdk(void);
 u64 nx2_vam_pool_base(void);
 u64 nx2_vam_pool_size(void);
-void nx2_vam_hide_alias(MemoryInfo *mi, u64 queried);
+void nx2_vam_hide_alias(void *memory_info, u64 queried);  // (a MemoryInfo)
 u64 nx2_vam_init(u64 base, u64 host, u64 mb);  // the pool taken: its bytes, or 0
 void *nx2_vam_override(const char *name);       // the imports it answers, or null
 // peek.c: with <folder>/debug, the paths the game opens and the strings it compares, said when it ends itself

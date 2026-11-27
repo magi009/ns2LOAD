@@ -187,7 +187,8 @@ u64 nx2_vam_pool_base(void) { return pool_base; }
 // time service's shared memory there, and the kernel refused that (dc01, "invalid memory region"); Kirby, log, 2026-11-27. So
 // what QueryMemory says of free memory there is said as reserved: the SDK's search for room goes on elsewhere (svc.c).
 
-void nx2_vam_hide_alias(MemoryInfo *mi, u64 q) {
+void nx2_vam_hide_alias(void *info, u64 q) {
+    MemoryInfo *mi = info;
     if (!nx2_vam_sdk() || !alias_size || mi->type != 0) return;
     const u64 a = mi->addr, e = mi->addr + mi->size, ab = alias_base, ae = alias_base + alias_size;
     if (e <= ab || a >= ae) return;  // (none of it there)

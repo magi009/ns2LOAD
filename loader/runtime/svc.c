@@ -993,7 +993,7 @@ int nx2_svc(u64 *r, u32 n) {
         if (!nx2_vam_sdk() || !r[0]) return 0;
         u32 page = 0;
         const u32 rc = svcQueryMemory((MemoryInfo *)r[0], &page, r[2]);
-        if (!rc) nx2_vam_hide_alias((MemoryInfo *)r[0], r[2]);
+        if (!rc) nx2_vam_hide_alias((void *)r[0], r[2]);
         r[0] = rc, r[1] = page;
         return 1;
     }
